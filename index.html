@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unit 4 — Semiconductor Physics</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@300;400;500&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$', '$$'], ['\\[', '\\]']],
+      processEscapes: true
+    },
+    svg: {
+      fontCache: 'global'
+    }
+  };
+</script>
+<style>
+  :root {
+    --bg: #050505;
+    --glass-bg: rgba(255,255,255,0.03);
+    --glass-bg-hover: rgba(255,255,255,0.055);
+    --glass-border: rgba(255,255,255,0.08);
+    --glass-border-strong: rgba(255,255,255,0.14);
+    --text: rgba(255,255,255,0.88);
+    --text-muted: rgba(255,255,255,0.38);
+    --text-dim: rgba(255,255,255,0.58);
+    --white: #ffffff;
+    --mono: 'DM Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+    --serif: 'DM Serif Display', serif;
+  }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-weight: 300;
+    font-size: 17px;
+    line-height: 1.7;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── SUBTLE NOISE TEXTURE ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.6;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 200;
+    height: 62px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+    gap: 1.5rem;
+    background: rgba(5,5,5,0.88);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--glass-border);
+  }
+
+  .nav-brand {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    font-weight: 400;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .nav-tabs {
+    display: flex;
+    gap: 0.15rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .nav-tabs::-webkit-scrollbar { display: none; }
+
+  .nav-tab {
+    padding: 0.45rem 1.1rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-muted);
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    font-family: var(--sans);
+  }
+  .nav-tab:hover {
+    background: var(--glass-bg);
+    color: var(--text-dim);
+    border-color: var(--glass-border);
+  }
+  .nav-tab.active {
+    background: rgba(255,255,255,0.07);
+    color: var(--white);
+    border-color: var(--glass-border-strong);
+  }
+
+  /* ── LAYOUT ── */
+  main {
+    position: relative;
+    z-index: 1;
+    padding: 92px 1.5rem 5rem;
+    max-width: 820px;
+    margin: 0 auto;
+  }
+
+  /* ── SECTIONS ── */
+  .section { display: none; }
+  .section.active {
+    display: block;
+    animation: fadeUp 0.35s cubic-bezier(0.16,1,0.3,1) forwards;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── SECTION HEADER ── */
+  .section-header {
+    margin-bottom: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--glass-border);
+  }
+  .section-tag {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    font-weight: 400;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 0.8rem;
+  }
+  .section-title {
+    font-family: var(--serif);
+    font-size: clamp(2.2rem, 4.5vw, 3.3rem);
+    font-weight: 400;
+    line-height: 1.05;
+    color: var(--white);
+    letter-spacing: -0.01em;
+  }
+
+  /* ── GLASS CARD ── */
+  .card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 1.8rem 2rem;
+    margin-bottom: 1.2rem;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .card:hover {
+    background: var(--glass-bg-hover);
+    border-color: var(--glass-border-strong);
+  }
+
+  .card-title {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 1.2rem;
+    padding-bottom: 0.9rem;
+    border-bottom: 1px solid var(--glass-border);
+  }
+
+  .card-sub {
+    font-family: var(--mono);
+    font-size: 0.73rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin: 1.6rem 0 0.8rem;
+  }
+
+  p { color: var(--text); margin-bottom: 0.7rem; }
+  p:last-child { margin-bottom: 0; }
+
+  strong, b { font-weight: 600; color: var(--white); }
+
+  ul, ol {
+    padding-left: 1.5rem;
+    color: var(--text);
+  }
+  li { margin-bottom: 0.4rem; }
+  li strong { color: var(--white); }
+
+  /* ── DIVIDER ── */
+  .divider {
+    height: 1px;
+    background: var(--glass-border);
+    margin: 1.3rem 0;
+  }
+
+  /* ── FORMULA BLOCK ── */
+  .formula {
+    background: rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-left: 2px solid rgba(255,255,255,0.22);
+    border-radius: 8px;
+    padding: 1.2rem 1.5rem;
+    margin: 1rem 0;
+    font-size: 1rem;
+    color: var(--white);
+    line-height: 2;
+    overflow-x: auto;
+  }
+  .formula .f-label {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    display: block;
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .formula .f-comment {
+    color: var(--text-muted);
+    font-size: 0.88rem;
+  }
+
+  /* ── BOXED RESULT ── */
+  .result {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 8px;
+    padding: 1.1rem 1.6rem;
+    margin: 1rem 0;
+    font-size: 1.1rem;
+    color: var(--white);
+    font-weight: 500;
+    text-align: center;
+    letter-spacing: 0.02em;
+  }
+
+  /* ── DERIVATION BLOCK ── */
+  .derivation {
+    background: rgba(0,0,0,0.6);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 10px;
+    padding: 1.6rem 1.8rem;
+    margin: 1.2rem 0;
+    counter-reset: step;
+  }
+  .derivation-title {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 1.3rem;
+    padding-bottom: 0.8rem;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .step {
+    display: grid;
+    grid-template-columns: 2rem 1fr;
+    gap: 0 1.2rem;
+    margin-bottom: 1.3rem;
+    counter-increment: step;
+    align-items: start;
+  }
+  .step:last-child { margin-bottom: 0; }
+
+  .step-num {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    padding-top: 0.15rem;
+    text-align: right;
+    font-weight: 400;
+  }
+  .step-num::after { content: counter(step); }
+
+  .step-body { }
+  .step-body p {
+    font-size: 0.96rem;
+    color: var(--text-dim);
+    margin-bottom: 0.5rem;
+    font-weight: 300;
+  }
+  .step-body .eq {
+    font-size: 1rem;
+    color: var(--white);
+    padding: 0.6rem 1rem;
+    background: rgba(255,255,255,0.03);
+    border-radius: 5px;
+    display: inline-block;
+    margin: 0.3rem 0;
+    line-height: 1.6;
+  }
+  .step-body .eq-label {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-left: 0.7rem;
+  }
+
+  /* ── CONDITION CHIPS ── */
+  .chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.9rem 0; }
+  .chip {
+    display: inline-block;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px;
+    padding: 0.28rem 0.85rem;
+    font-size: 0.83rem;
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-weight: 400;
+    letter-spacing: 0.02em;
+  }
+
+  /* ── CASE CARDS ── */
+  .case {
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 1.4rem 1.6rem;
+    margin: 0.9rem 0;
+    background: rgba(255,255,255,0.025);
+  }
+  .case-label {
+    font-family: var(--mono);
+    font-size: 0.71rem;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--white);
+    margin-bottom: 0.9rem;
+  }
+
+  /* ── DIAGRAM NOTES ── */
+  .diagram-note {
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 8px;
+    padding: 1.1rem 1.3rem;
+    margin: 0.7rem 0;
+    background: rgba(0,0,0,0.3);
+  }
+  .dn-label {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--white);
+    margin-bottom: 0.5rem;
+  }
+  .dn-label span {
+    display: inline-block;
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 4px;
+    text-align: center;
+    line-height: 1.5rem;
+    font-size: 0.75rem;
+    margin-right: 0.6rem;
+    color: var(--text-muted);
+  }
+  .dn-body { font-size: 0.94rem; color: var(--text-dim); }
+
+  /* ── REFERENCE TABLE ── */
+  .ref-table-wrap {
+    margin-top: 1.8rem;
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .ref-table-head {
+    padding: 0.75rem 1.4rem;
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    background: rgba(255,255,255,0.025);
+    border-bottom: 1px solid var(--glass-border);
+  }
+  table.ref {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+  table.ref th {
+    text-align: left;
+    padding: 0.65rem 1.4rem;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    color: var(--text-muted);
+    font-weight: 400;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: rgba(255,255,255,0.01);
+  }
+  table.ref td {
+    padding: 0.7rem 1.4rem;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    color: rgba(255,255,255,0.72);
+    line-height: 1.5;
+    font-size: 0.9rem;
+  }
+  table.ref tr:last-child td { border-bottom: none; }
+  table.ref td:first-child { color: var(--white); font-weight: 400; }
+
+  /* MathJax specific styling */
+  mjx-container {
+    display: inline-block !important;
+    margin: 0.2rem 0;
+  }
+  
+  mjx-container[display="true"] {
+    display: block !important;
+    margin: 0.8rem 0;
+    text-align: center;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 580px) {
+    body { font-size: 16px; }
+    .nav-brand { display: none; }
+    main { padding: 82px 1rem 4rem; }
+    .card { padding: 1.4rem 1.3rem; }
+    .derivation { padding: 1.3rem 1.3rem; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="nav-brand">21PYB102J &nbsp;·&nbsp; Unit 4</span>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="show('four-probe', this)">Four-Probe</button>
+    <button class="nav-tab" onclick="show('van-der-pauw', this)">Van der Pauw</button>
+    <button class="nav-tab" onclick="show('hall', this)">Hall Effect</button>
+    <button class="nav-tab" onclick="show('cv', this)">C-V Measurement</button>
+  </div>
+</nav>
+
+<main>
+
+<!-- ═══════════════════════════════ FOUR PROBE ═══════════════════════════════ -->
+<div class="section active" id="four-probe">
+  <div class="section-header">
+    <div class="section-tag">Topic 01</div>
+    <h1 class="section-title">Four-Probe Method</h1>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Why Four-Probe Over Two-Probe?</div>
+    <p>In the <strong>two-probe method</strong>, contact resistance and spreading resistance are large, so the true resistivity cannot be separated from the measured value.</p>
+    <p style="margin-top:0.7rem">The four-probe method solves this by separating current injection from voltage sensing:</p>
+    <ul style="margin-top:0.5rem">
+      <li><strong>Outer two probes</strong> — supply current from the source meter</li>
+      <li><strong>Inner two probes</strong> — measure voltage; draw no current (high-impedance voltmeter)</li>
+      <li>Probe and contact resistance do <em>not</em> contribute to the sample measurement</li>
+    </ul>
+    <div class="divider"></div>
+    <p><strong>Physical setup:</strong> Four equally spaced tungsten tips, spring-loaded, uniform spacing <strong>s</strong>. Two measurement techniques:</p>
+    <div class="chips">
+      <span class="chip">Four-point collinear probe</span>
+      <span class="chip">Van der Pauw</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Collinear Probe — Bulk Material</div>
+    <div class="chips"><span class="chip">Condition: $t \gg s$</span></div>
+
+    <p style="margin-top:0.9rem">When thickness is much greater than probe spacing, current spreads <strong>spherically</strong> from each outer probe tip.</p>
+
+    <div class="derivation">
+      <div class="derivation-title">Derivation — Bulk Resistivity</div>
+
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body">
+          <p>Area of spherical shell at radius $x$ from probe tip:</p>
+          <div class="eq">$$A = 2\pi x^2$$</div>
+          <span class="eq-label">— hemisphere</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body">
+          <p>Differential resistance element:</p>
+          <div class="eq">$$\Delta R = \frac{\rho \, dx}{A} = \frac{\rho \, dx}{2\pi x^2}$$</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body">
+          <p>Integrate between inner probes (limits $s \to 2s$), accounting for superposition of both outer probes:</p>
+          <div class="eq">$$R = \int_s^{2s} \frac{\rho \, dx}{2\pi x^2} = \frac{\rho}{2\pi} \left[-\frac{1}{x}\right]_s^{2s} = \frac{\rho}{2\pi} \left(\frac{1}{s} - \frac{1}{2s}\right) = \frac{\rho}{4\pi s}$$</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body">
+          <p>Superposition of two outer probes gives $R = V/(2I)$. Substituting:</p>
+          <div class="eq">$$\frac{V}{2I} = \frac{\rho}{4\pi s}$$</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body">
+          <p>Rearranging for resistivity:</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="result">$$\rho = \frac{V}{I} \cdot 2\pi s$$</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Collinear Probe — Thin Sheet</div>
+    <div class="chips"><span class="chip">Condition: $t \ll s$</span></div>
+
+    <p style="margin-top:0.9rem">When thickness is much less than probe spacing, current spreads in <strong>cylindrical rings</strong> (2D geometry), not spheres.</p>
+
+    <div class="derivation">
+      <div class="derivation-title">Derivation — Thin Sheet Resistivity</div>
+
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body">
+          <p>Area of cylindrical ring at radius $x$, height $t$:</p>
+          <div class="eq">$$A = 2\pi x t$$</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body">
+          <p>Differential resistance:</p>
+          <div class="eq">$$\Delta R = \frac{\rho \, dx}{2\pi x t}$$</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body">
+          <p>Integrate from $s \to 2s$:</p>
+          <div class="eq">$$R = \int_s^{2s} \frac{\rho \, dx}{2\pi x t} = \frac{\rho}{2\pi t} [\ln x]_s^{2s} = \frac{\rho}{2\pi t} \ln 2$$</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body">
+          <p>Using $R = V/(2I)$:</p>
+          <div class="eq">$$\frac{V}{2I} = \frac{\rho \ln 2}{2\pi t}$$</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body">
+          <p>Rearranging:</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="result">$$\rho = \frac{Vt\pi}{I \ln 2}$$</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Advantages Over Two-Probe</div>
+    <ul>
+      <li>Contact and spreading resistances are <strong>negligible</strong> at voltage probes</li>
+      <li><strong>High accuracy</strong> — probe resistance is not added to sample measurement</li>
+      <li>Suitable for measuring <strong>very low resistance</strong> values</li>
+      <li>Works on both <strong>bulk and thin-film</strong> specimens</li>
+    </ul>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════ VAN DER PAUW ═══════════════════════════════ -->
+<div class="section" id="van-der-pauw">
+  <div class="section-header">
+    <div class="section-tag">Topic 02</div>
+    <h1 class="section-title">Van der Pauw Method</h1>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Conditions — All Must Be Satisfied</div>
+    <ul>
+      <li>Sample must have a <strong>flat shape of uniform thickness</strong></li>
+      <li>Thickness must be <strong>much less</strong> than width and length</li>
+      <li>Sample must be <strong>homogeneous and isotropic</strong></li>
+      <li>Sample must have <strong>no isolated holes</strong></li>
+      <li>All four contacts must be located at the <strong>edges / periphery</strong></li>
+      <li>Contact area must be <strong>at least 10× smaller</strong> than total sample area</li>
+      <li>Symmetrical geometry preferred — ensures $f_A = f_B = 1$</li>
+    </ul>
+    <div class="divider"></div>
+    <p><strong>Preferred geometry:</strong> Cloverleaf &nbsp;·&nbsp; Acceptable: square with corner contacts &nbsp;·&nbsp; Not recommended: contacts inside perimeter</p>
+    <p style="margin-top:0.5rem">Contacts are numbered <strong>1 → 4 clockwise</strong> from top-left.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Measurement Procedure</div>
+    <p>Eight voltage measurements are made around the periphery with different current injection configurations. Two resistivity values are then derived:</p>
+
+    <div class="card-sub">$\rho_A$ — Horizontal configuration</div>
+    <div class="formula">
+      <span class="f-label">Equation A</span>
+      $$\rho_A = \frac{\pi}{\ln 2} \cdot f_A \cdot t_s \cdot \frac{V_1 - V_2 + V_3 - V_4}{4I}$$
+    </div>
+
+    <div class="card-sub">$\rho_B$ — Vertical configuration</div>
+    <div class="formula">
+      <span class="f-label">Equation B</span>
+      $$\rho_B = \frac{\pi}{\ln 2} \cdot f_B \cdot t_s \cdot \frac{V_5 - V_6 + V_7 - V_8}{4I}$$
+    </div>
+
+    <div class="formula" style="font-size:0.86rem; margin-top:1rem;">
+      <span class="f-label">Variables</span>
+      $t_s$ — sample thickness (cm)<br>
+      $f_A, f_B$ — geometrical correction factors (= 1 for perfect symmetry)<br>
+      $I$ — current through sample (A)<br>
+      $V_1$ – $V_8$ — voltages measured by voltmeter
+    </div>
+
+    <div class="card-sub">Average Resistivity</div>
+    <div class="result">$$\rho_{\text{AVG}} = \frac{\rho_A + \rho_B}{2}$$</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Properties Measurable by This Method</div>
+    <ol>
+      <li>Resistivity</li>
+      <li>Doping type — p-type or n-type</li>
+      <li>Density of majority carriers (per unit area)</li>
+      <li>Charge density and doping level</li>
+      <li>Mobility of majority carriers</li>
+    </ol>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════ HALL EFFECT ═══════════════════════════════ -->
+<div class="section" id="hall">
+  <div class="section-header">
+    <div class="section-tag">Topic 03</div>
+    <h1 class="section-title">Hall Effect</h1>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Definition</div>
+    <p>When a current-carrying conductor (metal or semiconductor) is placed in a <strong>transverse magnetic field</strong>, an electric field is produced inside the conductor in a direction <strong>normal to both the current and the magnetic field</strong>. This is the Hall Effect. The resulting voltage is the <strong>Hall voltage $V_H$</strong>.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Geometry of the Setup</div>
+    <ul>
+      <li>Conventional current along <strong>+OX</strong></li>
+      <li>Magnetic field $B$ along <strong>+OY</strong></li>
+      <li>Hall field $E_H$ develops along <strong>OZ</strong></li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Case I — N-type Semiconductor or Metal</div>
+    <div class="case">
+      <div class="case-label">N-type / Metal</div>
+      <ul>
+        <li>Majority carriers = <strong>electrons</strong></li>
+        <li>Electrons move along <strong>−OX</strong> (opposite to conventional current)</li>
+        <li>Magnetic force on electron: <strong>$F = -Bev$</strong> → acts along +OZ</li>
+        <li>Electrons accumulate at face ABEF → ABEF becomes <strong>negative</strong>, OCDG becomes <strong>positive</strong></li>
+        <li>Hall field $E_H$ builds up, opposing further accumulation until equilibrium</li>
+      </ul>
+    </div>
+
+    <div class="derivation" style="margin-top:1rem">
+      <div class="derivation-title">Derivation — Hall Coefficient (N-type)</div>
+
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body">
+          <p>At equilibrium, electric force balances magnetic force:</p>
+          <div class="eq">$$-eE_H = -Bev \quad \Rightarrow \quad E_H = Bv \quad \cdots(1)$$</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body">
+          <p>Current density $J$ relates to carrier velocity:</p>
+          <div class="eq">$$J = -nev \quad \cdots(2)$$</div>
+          <div class="eq">$$v = \frac{J}{-ne} \quad \cdots(3)$$</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body">
+          <p>Substitute (3) into (1):</p>
+          <div class="eq">$$E_H = \frac{BJ}{-ne} \quad \cdots(4)$$</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body">
+          <p>Hall coefficient is defined as $R_H = E_H / BJ$. Substituting (4):</p>
+          <div class="eq">$$R_H = \frac{E_H}{BJ} = \frac{1}{-ne}$$</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="result">$$R_H = -\frac{1}{ne} \quad \text{(negative for N-type)}$$</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Case II — P-type Semiconductor</div>
+    <div class="case">
+      <div class="case-label">P-type Semiconductor</div>
+      <ul>
+        <li>Majority carriers = <strong>holes</strong> (positively charged)</li>
+        <li>Holes move along <strong>+OX</strong> — same direction as conventional current</li>
+        <li>Magnetic force: <strong>$F = +Bev$</strong> → acts along +OZ</li>
+        <li>Holes accumulate at face ABEF → ABEF becomes <strong>positive</strong>, OCDG negative</li>
+        <li>Hall voltage $V_H$ has <strong>opposite sign</strong> compared to N-type → used to identify carrier type</li>
+      </ul>
+    </div>
+    <div class="result" style="margin-top:1rem">$$R_H = +\frac{1}{pe} \quad \text{(positive for P-type)}$$</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Experimental Determination of $R_H$</div>
+    <p>A rectangular slab: thickness <strong>$t$</strong>, width <strong>$w$</strong>, current <strong>$I$</strong>, magnetic field <strong>$B \perp I$</strong>.</p>
+
+    <div class="derivation" style="margin-top:1rem">
+      <div class="derivation-title">Derivation — $R_H$ from Measurable Quantities</div>
+
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body">
+          <p>Hall field from measured voltage:</p>
+          <div class="eq">$$E_H = \frac{V_H}{w} \quad \cdots(8)$$</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body">
+          <p>Current density from geometry:</p>
+          <div class="eq">$$J = \frac{I}{wt} \quad \cdots(11)$$</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body">
+          <p>Substitute into $R_H = E_H / BJ$:</p>
+          <div class="eq">$$R_H = \frac{V_H / w}{B \cdot I / wt} = \frac{V_H \cdot t}{I \cdot B}$$</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body">
+          <p>Final expression:</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="result">$$R_H = \frac{V_H \cdot t}{I \cdot B} \quad \text{[m}^3\text{/coulomb]}$$</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Applications</div>
+
+    <div class="card-sub">1. Determine Semiconductor Type</div>
+    <p>$R_H$ negative → <strong>N-type</strong> &nbsp;|&nbsp; $R_H$ positive → <strong>P-type</strong></p>
+
+    <div class="divider"></div>
+    <div class="card-sub">2. Carrier Concentration</div>
+    <div class="formula">$$n = \frac{1}{e \cdot R_H} \quad \text{or} \quad p = \frac{1}{e \cdot R_H}$$</div>
+
+    <div class="divider"></div>
+    <div class="card-sub">3. Carrier Mobility</div>
+    <div class="formula">
+      $$\mu_e = \frac{\sigma_n}{ne} = -\sigma_n \cdot R_H$$
+      $$\mu_h = \frac{\sigma_p}{pe} = \sigma_p \cdot R_H$$
+    </div>
+
+    <div class="divider"></div>
+    <div class="card-sub">4. Magnetic Flux Density</div>
+    <div class="formula">$$B = \frac{V_H \cdot t}{R_H \cdot I}$$</div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════ C-V MEASUREMENT ═══════════════════════════════ -->
+<div class="section" id="cv">
+  <div class="section-header">
+    <div class="section-tag">Topic 04</div>
+    <h1 class="section-title">C-V Measurement</h1>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Background</div>
+    <p>Introduced by <strong>Hillibrand and Gold (1960)</strong> to determine majority carrier concentration in semiconductors.</p>
+    <p style="margin-top:0.7rem">C-V measurements yield quantitative information about:</p>
+    <ul style="margin-top:0.4rem">
+      <li><strong>Diffusion potential</strong> and doping concentration</li>
+      <li><strong>Doping profile</strong> as a function of depth from the junction</li>
+    </ul>
+    <div class="divider"></div>
+    <p><strong>Applicable to:</strong></p>
+    <div class="chips">
+      <span class="chip">PN junctions</span>
+      <span class="chip">Schottky barriers</span>
+      <span class="chip">Electrolyte-semiconductor</span>
+      <span class="chip">MIS field effect</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Principle</div>
+    <p>The capacitance at a PN junction depends on the <strong>charge-depletion layer</strong> formed at the junction. The depletion region is swept free of mobile carriers by the built-in drift field, leaving behind ionized donors and acceptors — behaving like a parallel-plate capacitor:</p>
+    <div class="result" style="margin:1rem 0">$$C = \frac{\varepsilon A}{W}$$</div>
+    <p>where <strong>$W$</strong> = depletion width, <strong>$A$</strong> = junction area, <strong>$\varepsilon$</strong> = permittivity.</p>
+    <p style="margin-top:0.6rem">Varying the applied voltage changes $W$, which changes $C$. Plotting <strong>$C$ vs $V$</strong> gives the doping profile as a function of depth.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">PN Junction — Poisson's Equation</div>
+    <p>In the depletion region, Poisson's equation governs the electrostatics:</p>
+
+    <div class="formula">
+      <span class="f-label">Poisson's Equation</span>
+      $$\frac{\partial^2 v}{\partial x^2} = \frac{\partial E}{\partial x} = \frac{\rho(x)}{\varepsilon} = \frac{e}{\varepsilon} \left[p(x) - n(x) + N_D^+(x) - N_A^-(x)\right]$$
+    </div>
+
+    <div class="card-sub">For p-side &nbsp;($-x_p \leq x < 0$)</div>
+    <div class="formula">$$-\frac{\partial^2 v}{\partial x^2} \approx \frac{e}{\varepsilon} \cdot N_A^-$$</div>
+
+    <div class="card-sub">For n-side &nbsp;($0 < x \leq x_n$)</div>
+    <div class="formula">$$-\frac{\partial^2 v}{\partial x^2} \approx \frac{e}{\varepsilon} \cdot N_D^+$$</div>
+
+    <p style="margin-top:0.9rem">Solving these three equations yields the potential distribution:</p>
+    <div class="result">$$V(x) = V_{bi} \left[ 2\left(\frac{x}{w}\right) - \left(\frac{x}{w}\right)^2 \right]$$</div>
+
+    <div class="card-sub">Built-in Potential</div>
+    <div class="result">$$V_{bi} = \frac{KT}{e} \cdot \ln\left(\frac{N_d \cdot N_a}{n_i^2}\right)$$</div>
+    <p style="margin-top:0.6rem; font-size:0.92rem; color:var(--text-dim)">where $N_d$, $N_a$ = donor/acceptor concentrations &nbsp;|&nbsp; $n_i$ = intrinsic carrier concentration &nbsp;|&nbsp; $KT/e \approx 0.026$ V at 300 K</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Four Key Diagrams — Abrupt PN Junction (No Bias)</div>
+
+    <div class="diagram-note">
+      <div class="dn-label"><span>A</span>Space Charge Distribution</div>
+      <div class="dn-body">Depletion approximation. Dashed lines show majority carrier tails at the edges of the depletion region.</div>
+    </div>
+    <div class="diagram-note">
+      <div class="dn-label"><span>B</span>Electric Field</div>
+      <div class="dn-body">Triangular profile across depletion region. Peaks at junction ($x = 0$), zero at both depletion edges.</div>
+    </div>
+    <div class="diagram-note">
+      <div class="dn-label"><span>C</span>Potential Distribution</div>
+      <div class="dn-body">S-shaped curve rising from 0 to $V_{bi}$. The built-in potential saturates in the n-region.</div>
+    </div>
+    <div class="diagram-note">
+      <div class="dn-label"><span>D</span>Energy Band Diagram</div>
+      <div class="dn-body">Fermi level $E_F$ is flat at equilibrium. Bands bend at junction by $eV_{bi}$. Conduction and valence bands shift together.</div>
+    </div>
+  </div>
+
+  <!-- Quick Reference -->
+  <div class="ref-table-wrap">
+    <div class="ref-table-head">Quick Formula Reference — All Topics</div>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th>Quantity</th>
+          <th>Formula</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Bulk resistivity</td><td>$\rho = (V/I) \cdot 2\pi s$</td></tr>
+        <tr><td>Thin sheet resistivity</td><td>$\rho = Vt\pi / (I \ln 2)$</td></tr>
+        <tr><td>vdP average</td><td>$\rho_{\text{AVG}} = (\rho_A + \rho_B) / 2$</td></tr>
+        <tr><td>Hall coefficient</td><td>$R_H = V_H t / (I B)$</td></tr>
+        <tr><td>$R_H$ — N-type</td><td>$R_H = -1/ne$</td></tr>
+        <tr><td>$R_H$ — P-type</td><td>$R_H = +1/pe$</td></tr>
+        <tr><td>Carrier concentration</td><td>$n$ or $p = 1 / (e R_H)$</td></tr>
+        <tr><td>Electron mobility</td><td>$\mu_e = -\sigma_n R_H$</td></tr>
+        <tr><td>Hole mobility</td><td>$\mu_h = \sigma_p R_H$</td></tr>
+        <tr><td>Built-in potential</td><td>$V_{bi} = (KT/e) \ln(N_d N_a / n_i^2)$</td></tr>
+        <tr><td>Junction capacitance</td><td>$C = \varepsilon A / W$</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</main>
+
+<script>
+  function show(id, btn) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    btn.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>
